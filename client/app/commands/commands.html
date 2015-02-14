@@ -1,0 +1,42 @@
+<div ng-include="'components/navbar/navbar.html'"></div>
+
+<div class="col-md-12">
+The following commands assume the slash command of '/deployment'. To change this, see the <a ng-href="/setup">Setup</a> page.
+</div>
+<div class="col-md-12">
+<ul class="command-list">
+  <li>
+    <div><span class="command">/deployment add [task]</span> - Adds a task for your team.</div>
+  </li>
+  <li>
+    <div><span class="command">/deployment complete [task id]</span> - Marks the specified task as complete.</div>
+  </li>
+  <li>
+    <div><span class="command">/deployment me [task id]</span> - Assigns the specific task to you.</div>
+  </li>
+  <li>
+    <div><span class="command">/deployment assign [task id] [user name]</span> - Assigns the specific task to the specified user. A blank user name is the same as the 'me' command.</div>
+  </li>
+  <li>
+    <div><span class="command">/deployment delete [task id]</span> - Deletes the specific task for your team.</div>
+  </li>
+  <li>
+    <div><span class="command">/deployment</span> - Displays a list of deployment tasks for your team.</div>
+  </li>
+  <li>
+    <div><span class="command">/deployment list</span> - Displays a list of deployment tasks for your team.</div>
+  </li>
+  <li>
+    <div><span class="command">/deployment done</span> - Displays all completed tasks for your team.</div>
+  </li>
+  <li>
+    <div><span class="command">/deployment doing</span> - Displays a list of deployment tasks assigned to you.</div>
+  </li>
+  <li>
+    <div><span class="command">/deployment assigned</span> - Displays a list of in progress tasks.</div>
+  </li>
+  <li>
+    <div><span class="command">/deployment unassigned</span> - Displays a list of available tasks.</div>
+  </li>
+</ul>
+</div>

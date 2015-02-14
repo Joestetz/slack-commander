@@ -7,7 +7,109 @@ $fa-font-path: "/bower_components/font-awesome/fonts";
 /**
  * App-wide Styles
  */
+ 
+$font-family-standard: 'Open Sans Condensed', sans-serif;
+$font-family-fancy: 'Lobster', cursive;
+$font-family-crisp: 'Lato', sans-serif;
 
+$color-orange: #E88924;
+$color-orange-light: #EFAE69;
+$color-orange-lighter: #F7D4AE;
+$color-red: #C5352D;
+$color-red-light: #DB6963;
+$color-red-lighter: #EAA5A1;
+
+html, body {
+    height: 100%;
+}
+
+html {
+	overflow-y: scroll;
+}
+
+body {
+	font-family: $font-family-standard;
+	font-size: 20px;
+	
+	.navbar, .btn {
+		font-family: $font-family-crisp;
+		font-size: 16px;
+	}
+  
+  .btn-default:hover {
+    color: #FFF;
+    background-color: $color-red;
+  }
+}
+
+h1, h2, h3, h4, h5, h6, 
+.h1, .h2, .h3, .h4, .h5, .h6 {
+	font-family: $font-family-standard;
+	
+	&.fancy {
+		font-family: $font-family-fancy;
+	}
+  
+  &.crisp {
+		font-family: $font-family-crisp;
+	}
+}
+
+::selection {
+	color: #FFF;
+	background-color: $color-red;
+}
+
+::-moz-selection {
+	color: #FFF;
+	background-color: $color-red;
+}
+
+#banner {
+  border-bottom: none;
+  margin-top: -20px;
+  position: relative;
+  padding: 30px 15px;
+  color: #F5F5F5;
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+  background: $color-orange;
+  
+  h1 {
+    font-size: 60px;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  
+  h3 {
+    font-size: 24px;
+    line-height: 1;
+  }
+}
+
+#footer {
+  text-align: center;
+  padding: 30px 0;
+  margin-top: 70px;
+  border-top: 1px solid #E5E5E5;
+}
+
+.form-control {
+  font-size: 18px;
+}
+
+.form-control[type="checkbox"] {
+  box-shadow: none;
+  border: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 12px;
+  
+  &:focus {
+    border: none;
+  }
+}
+ 
 .browsehappy {
     margin: 0.2em 0;
     background: #ccc;
@@ -17,7 +119,9 @@ $fa-font-path: "/bower_components/font-awesome/fonts";
 
 // Component styles are injected through grunt
 // injector
-@import 'account/login/login.scss';
-@import 'admin/admin.scss';
+@import 'commands/commands.scss';
 @import 'main/main.scss';
+@import 'setup/setup.scss';
+@import 'modal/modal.scss';
+@import 'navbar/navbar.scss';
 // endinjector

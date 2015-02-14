@@ -1,0 +1,18 @@
+.navbar-static-top {
+  li {
+    position: relative;
+
+    a:hover:after {
+      border-left: solid transparent 10px;
+      border-right: solid transparent 10px;
+      border-bottom: solid $color-red 10px;
+      bottom: -1px;
+      content: " ";
+      height: 0;
+      left: 50%;
+      margin-left: -10px;
+      position: absolute;
+      width: 0;
+    }
+  }
+}
