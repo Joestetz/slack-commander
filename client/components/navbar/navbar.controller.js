@@ -9,8 +9,8 @@ angular.module('slackDeploymentTrackerApp')
       'title': 'Setup',
       'link': './setup'
     },{
-      'title': 'Commands',
-      'link': './commands'
+      'title': 'Tasker',
+      'link': './tasker'
     }];
 
     $scope.isCollapsed = true;

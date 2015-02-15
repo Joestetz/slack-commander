@@ -119,9 +119,9 @@ h1, h2, h3, h4, h5, h6,
 
 // Component styles are injected through grunt
 // injector
-@import 'commands/commands.scss';
 @import 'main/main.scss';
 @import 'setup/setup.scss';
+@import 'tasker/tasker.scss';
 @import 'modal/modal.scss';
 @import 'navbar/navbar.scss';
 // endinjector

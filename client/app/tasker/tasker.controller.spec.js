@@ -1,16 +1,16 @@
 'use strict';
 
-describe('Controller: CommandsCtrl', function () {
+describe('Controller: TaskerCtrl', function () {
 
   // load the controller's module
   beforeEach(module('slackDeploymentTrackerApp'));
 
-  var CommandsCtrl, scope;
+  var TaskerCtrl, scope;
 
   // Initialize the controller and a mock scope
   beforeEach(inject(function ($controller, $rootScope) {
     scope = $rootScope.$new();
-    CommandsCtrl = $controller('CommandsCtrl', {
+    TaskerCtrl = $controller('TaskerCtrl', {
       $scope: scope
     });
   }));

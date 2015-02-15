@@ -33,10 +33,10 @@ module.exports = function (grunt) {
       // configurable paths
       client: require('./bower.json').appPath || 'client',
       dist: 'dist',
-      website_dev: '../website/client/showcase/slackDeploymentTracker',
-      website_prod: '../website/dist/public/showcase/slackDeploymentTracker',
-      website_server_dev: '../website/server/showcase/slackDeploymentTracker',
-      website_server_prod: '../website/dist/server/showcase/slackDeploymentTracker'
+      website_dev: '../website/client/showcase/slackCommander',
+      website_prod: '../website/dist/public/showcase/slackCommander',
+      website_server_dev: '../website/server/showcase/slackCommander',
+      website_server_prod: '../website/dist/server/showcase/slackCommander'
     },
     express: {
       options: {
@@ -337,7 +337,7 @@ module.exports = function (grunt) {
     ngtemplates: {
       options: {
         // This should be the name of your apps angular module
-        module: 'slackDeploymentTrackerApp',
+        module: 'slackCommanderApp',
         htmlmin: {
           collapseBooleanAttributes: true,
           collapseWhitespace: true,
@@ -611,7 +611,7 @@ module.exports = function (grunt) {
         overwrite: true,
         replacements: [{
           from: '<base href="/">',
-          to: '<base href="/showcase/slackDeploymentTracker/">'
+          to: '<base href="/showcase/slackCommander/">'
         }]
       }
     }
