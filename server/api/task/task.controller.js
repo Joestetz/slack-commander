@@ -3,57 +3,6 @@
 var _ = require('lodash');
 var Task = require('./task.model');
 
-// // Get list of tasks
-// exports.index = function(req, res) {
-  // Task.find(function (err, tasks) {
-    // if(err) { return handleError(res, err); }
-    // return res.json(200, tasks);
-  // });
-// };
-
-// // Get a single task
-// exports.show = function(req, res) {
-  // Task.findById(req.params.id, function (err, task) {
-    // if(err) { return handleError(res, err); }
-    // if(!task) { return res.send(404); }
-    // return res.json(task);
-  // });
-// };
-
-// // Creates a new task in the DB.
-// exports.create = function(req, res) {
-  // Task.create(req.body, function(err, task) {
-    // if(err) { return handleError(res, err); }
-    // return res.json(201, task);
-  // });
-// };
-
-// // Updates an existing task in the DB.
-// exports.update = function(req, res) {
-  // if(req.body._id) { delete req.body._id; }
-  // Task.findById(req.params.id, function (err, task) {
-    // if (err) { return handleError(res, err); }
-    // if(!task) { return res.send(404); }
-    // var updated = _.merge(task, req.body);
-    // updated.save(function (err) {
-      // if (err) { return handleError(res, err); }
-      // return res.json(200, task);
-    // });
-  // });
-// };
-
-// // Deletes a task from the DB.
-// exports.destroy = function(req, res) {
-  // Task.findById(req.params.id, function (err, task) {
-    // if(err) { return handleError(res, err); }
-    // if(!task) { return res.send(404); }
-    // task.remove(function(err) {
-      // if(err) { return handleError(res, err); }
-      // return res.send(204);
-    // });
-  // });
-// };
-
 // Execute command
 exports.index = function(req, res) {
   var parsed = parseCommand(req);
@@ -62,26 +11,34 @@ exports.index = function(req, res) {
   var commandResponse;
   switch(parsed.command) {
     case 'add':
-      commandResponse = commandAdd(res, parsed);
+      commandResponse = cmdAdd(res, parsed);
       break;
     case 'complete':
+      commandResponse = cmdComplete(res, parsed);
       break;
     case 'me':
+      commandResponse = cmdAssign(res, parsed);
       break;
     case 'assign':
+      commandResponse = cmdAssign(res, parsed);
       break;
     case 'delete':
+      commandResponse = cmdDelete(res, parsed);
       break;
     case 'list':
-      commandResponse = commandList(res, parsed);
+      commandResponse = cmdList(res, parsed);
       break;
     case 'done':
+      commandResponse = cmdDone(res, parsed);
       break;
     case 'doing':
+      commandResponse = cmdDoing(res, parsed);
       break;
     case 'assigned':
+      commandResponse = cmdAssigned(res, parsed);
       break;
     case 'unassigned':
+      commandResponse = cmdUnassigned(res, parsed);
       break;
     default:
       commandResponse = handleError(res, 'Command not recognized');
@@ -108,14 +65,14 @@ function parseCommand(req) {
     error: false,
     token: req.body.token,
     teamId: req.body.team_id,
-    author: req.body.user_name
+    user: req.body.user_name
   };
   
   var commandArgs = req.body.text.split(' ');
   if(commandArgs.length == 0 || commandArgs[0] === '') {
     res.command = 'list';
   } else {
-    res.command = commandArgs[0];
+    res.command = commandArgs[0].toLowerCase();
   }
   
   if(commandArgs.length > 1) {
@@ -139,7 +96,8 @@ function joinArgs(args, start) {
   return str;
 }
 
-function commandAdd(res, commandObj) {
+function cmdAdd(res, commandObj) {
+  if(commandObj.command !== 'add') return handleError(res, 'Unexpected command');
   if(commandObj.commandArgs.length == 0) {
     return handleError(res, 'You must specify a task name');
   }
@@ -148,7 +106,7 @@ function commandAdd(res, commandObj) {
   
   var task = {
       name: taskName,
-      author: commandObj.author,
+      author: commandObj.user,
       token: commandObj.token,
       teamId: commandObj.teamId
   };
@@ -158,10 +116,136 @@ function commandAdd(res, commandObj) {
     return handleSuccess(res, 'Task added with ID of ' + task._id);
   });
 }
+    
+function cmdComplete(res, commandObj) {
+  if(commandObj.command !== 'complete') return handleError(res, 'Unexpected command');
+  if(commandObj.commandArgs.length == 0) {
+    return handleError(res, 'You must specify a task id');
+  }
+  
+  Task.findById(commandObj.commandArgs[0], function (err, task) {
+    if(err) { return handleError(res, err); }
+    if(!task || task.token !== commandObj.token || task.teamId !== commandObj.teamId) {
+      return handleError(res, 'Task not found');
+    }
+    
+    task.completed = Date.now();
+    task.save(function (err) {
+      if (err) { return handleError(res, err); }
+      return handleSuccess(res, 'Task marked as complete');
+    });
+  });
+}
+    
+function cmdAssign(res, commandObj) {
+  if(commandObj.commandArgs.length == 0) {
+    return handleError(res, 'You must specify a task id');
+  }
+  
+  var assignedTo = '';
+  if(commandObj.command === 'me') {
+    assignedTo = commandObj.user;
+  } else if(commandObj.command === 'assign') {
+    assignedTo = (commandObj.commandArgs.length >= 2) ? commandObj.commandArgs[1] : commandObj.user;
+  } else {
+    return handleError(res, 'Unexpected command');
+  }
+  
+  Task.findById(commandObj.commandArgs[0], function (err, task) {
+    if(err) { return handleError(res, err); }
+    if(!task || task.token !== commandObj.token || task.teamId !== commandObj.teamId) {
+      return handleError(res, 'Task not found');
+    }
+    
+    task.assignedTo = assignedTo;
+    task.save(function (err) {
+      if (err) { return handleError(res, err); }
+      return handleSuccess(res, 'Task now assigned to ' + assignedTo);
+    });
+  });
+}
 
-function commandList(res, commandObj) {
+function cmdDelete(res, commandObj) {
+  if(commandObj.command !== 'delete') return handleError(res, 'Unexpected command');
+  if(commandObj.commandArgs.length == 0) {
+    return handleError(res, 'You must specify a task id');
+  }
+  
+  Task.findById(commandObj.commandArgs[0], function (err, task) {
+    if(err) { return handleError(res, err); }
+    if(!task || task.token !== commandObj.token || task.teamId !== commandObj.teamId) {
+      return handleError(res, 'Task not found');
+    }
+    
+    task.remove(function(err) {
+      if(err) { return handleError(res, err); }
+      return handleSuccess(res, 'Task deleted');
+    });
+  });
+}
+
+function cmdInfo(res, commandObj) {
+  if(commandObj.command !== 'info') return handleError(res, 'Unexpected command');
+  if(commandObj.commandArgs.length == 0) {
+    return handleError(res, 'You must specify a task id');
+  }
+  
+  Task.findById(commandObj.commandArgs[0], function (err, task) {
+    if (err) { return handleError(res, err); }
+    if(!task || task.token !== commandObj.token || task.teamId !== commandObj.teamId) {
+      return handleError(res, 'Task not found');
+    }
+    
+    return res.json(200, task);
+  });
+}
+
+function cmdList(res, commandObj) {
+  if(commandObj.command !== 'list') return handleError(res, 'Unexpected command');
+  
   Task.find({ token: commandObj.token, teamId: commandObj.teamId }, function (err, tasks) {
     if(err) { return handleError(res, err); }
+    if(tasks.length == 0) return handleError(res, 'No tasks found');
+    return res.json(200, tasks);
+  }); 
+}
+
+function cmdDone(res, commandObj) {
+  if(commandObj.command !== 'done') return handleError(res, 'Unexpected command');
+  
+  Task.find({ token: commandObj.token, teamId: commandObj.teamId, completed: { $ne: null } }, function (err, tasks) {
+    if(err) { return handleError(res, err); }
+    if(tasks.length == 0) return handleError(res, 'No tasks found');
+    return res.json(200, tasks);
+  }); 
+}
+
+function cmdDoing(res, commandObj) {
+  if(commandObj.command !== 'doing') return handleError(res, 'Unexpected command');
+  
+  Task.find({ token: commandObj.token, teamId: commandObj.teamId, completed: null, assignedTo: commandObj.user }, function (err, tasks) {
+    if(err) { return handleError(res, err); }
+    if(tasks.length == 0) return handleError(res, 'No tasks found');
+    return res.json(200, tasks);
+  }); 
+}
+
+function cmdAssigned(res, commandObj) {
+  if(commandObj.command !== 'assigned') return handleError(res, 'Unexpected command');
+  
+  Task.find({ token: commandObj.token, teamId: commandObj.teamId, completed: null, assignedTo: { $ne: null } }, function (err, tasks) {
+    if(err) { return handleError(res, err); }
+    if(tasks.length == 0) return handleError(res, 'No tasks found');
+    return res.json(200, tasks);
+  }); 
+}
+
+function cmdUnassigned(res, commandObj) {
+  if(commandObj.command !== 'unassigned') return handleError(res, 'Unexpected command');
+  
+  Task.find({ token: commandObj.token, teamId: commandObj.teamId, completed: null, assignedTo: null }, function (err, tasks) {
+    if(err) { return handleError(res, err); }
+    if(tasks.length == 0) return handleError(res, 'No tasks found');
     return res.json(200, tasks);
   }); 
 }
