@@ -253,7 +253,7 @@ function cmdHelp(res, commandObj) {
         }
       ]
     },{
-      fallback: 'Command: /tasker assign [task id] [user name] - Assigns the specific task to the specified user. A blank user name is the same as the command',
+      fallback: 'Command: /tasker assign [task id] [user name] - Assigns the specific task to the specified user. A blank user name is the same as the \'me\' command',
       text: 'Assign Task',
       fields: [
         {
@@ -262,7 +262,7 @@ function cmdHelp(res, commandObj) {
           'short': true
         },{
           title: 'Description',
-          value: 'Assigns the specific task to the specified user. A blank user name is the same as the me command',
+          value: 'Assigns the specific task to the specified user. A blank user name is the same as the \'me\' command',
           'short': true
         }
       ]
@@ -568,7 +568,4 @@ function cmdUnassigned(res, commandObj) {
     
     return res.send(200);
   }); 
-}
-
-function cmdHelp(res, commandObj) {
 }
