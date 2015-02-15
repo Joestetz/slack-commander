@@ -2,6 +2,11 @@
 
 var _ = require('lodash');
 var Task = require('./task.model');
+var Slack = require('slack-notify')('https://hooks.slack.com/services/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');
+
+var _colorAssigned = '#FFA500';
+var _colorUnassigned = '#DDDDDD';
+var _colorDone = '#00D000';
 
 // Execute command
 exports.index = function(req, res) {
@@ -48,6 +53,80 @@ exports.index = function(req, res) {
   }
 };
 
+// function getWebhookConnection(token) {
+  // var hookURl;
+  // switch(token) {
+    // case 'm1PhkiEHawVYUtx6E7iyROt9':
+      // hookUrl = 'https://hooks.slack.com/services/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';
+      // break;
+    // default: break;
+  // }
+  
+  // return new Slack(hookUrl);
+// }
+
+function sendWebhook(commandObj, attachments) {
+  //var slack = getWebhookConnection(commandObj.token);
+  var options = {
+    username: 'TaskerBot',
+    icon_emoji: 'pencil',
+    attachments: attachments
+  };
+  
+  if(!commandObj.shout) {
+    options.channel = '@' + commandObj.user;
+  }
+  
+  //slack.send(options);
+  Slack.send(options);
+}
+
+function getFormattedTasks(tasks, showAssignedTo, showAuthor, showCompleted) {
+  var attachments = []
+  for(var i = 0; i < tasks.length; i++) {
+    var t = tasks[i];
+    var status = !t.completed ? (!t.assignedTo ? 'Unassigned' : t.assignedTo) : 'Done';
+    var attach = {
+      fallback: 'Task ' + t._id + ' - ' + status + ' - ' + t.name,
+      text: t.name,
+      fields: [{
+          title: 'Task ID',
+          value: t._id,
+          'short': true
+      }],
+      color: (!t.completed ? (!t.assignedTo ? _colorUnassigned : _colorAssigned) : _colorDone)
+    };
+    
+    if(showAssignedTo) {
+      attach.fields.push({
+        title: 'Assgned To',
+        value: t.assignedTo,
+        'short': true
+      });
+    }
+    
+    if(showAuthor) {
+      attach.fields.push({
+        title: 'Created By',
+        value: t.author,
+        'short': true
+      });
+    }
+    
+    if(showCompleted) {
+      attach.fields.push({
+        title: 'Completed On',
+        value: t.completed,
+        'short': true
+      });
+    }
+    
+    attachments.push(attach);
+  }
+  
+  return attachments;
+}
+
 function handleError(res, err) {
   return res.send(500, err);
 }
@@ -65,10 +144,16 @@ function parseCommand(req) {
     error: false,
     token: req.body.token,
     teamId: req.body.team_id,
-    user: req.body.user_name
+    user: req.body.user_name,
+    shout: false
   };
   
   var commandArgs = req.body.text.split(' ');
+  if(commandArgs.length > 0 && commandArgs[0].toLowerCase() === 'shout') {
+    res.shout = true;
+    commandArgs.shift();
+  }
+  
   if(commandArgs.length == 0 || commandArgs[0] === '') {
     res.command = 'list';
   } else {
@@ -144,9 +229,9 @@ function cmdAssign(res, commandObj) {
   
   var assignedTo = '';
   if(commandObj.command === 'me') {
-    assignedTo = commandObj.user;
+    assignedTo = '@' + commandObj.user;
   } else if(commandObj.command === 'assign') {
-    assignedTo = (commandObj.commandArgs.length >= 2) ? commandObj.commandArgs[1] : commandObj.user;
+    assignedTo = (commandObj.commandArgs.length >= 2) ? commandObj.commandArgs[1] : '@' + commandObj.user;
   } else {
     return handleError(res, 'Unexpected command');
   }
@@ -196,7 +281,12 @@ function cmdInfo(res, commandObj) {
       return handleError(res, 'Task not found');
     }
     
-    return res.json(200, task);
+    var tasks = [];
+    tasks.push(task);
+    var attachments = getFormattedTasks(tasks, true, true, true);
+    sendWebhook(commandObj, attachments);
+    
+    return res.send(200);
   });
 }
 
@@ -206,8 +296,12 @@ function cmdList(res, commandObj) {
   Task.find({ token: commandObj.token, teamId: commandObj.teamId }, function (err, tasks) {
     if(err) { return handleError(res, err); }
     if(tasks.length == 0) return handleError(res, 'No tasks found');
-    return res.json(200, tasks);
-  }); 
+    
+    var attachments = getFormattedTasks(tasks, true, false, false);
+    sendWebhook(commandObj, attachments);
+    
+    return res.send(200);
+  });
 }
 
 function cmdDone(res, commandObj) {
@@ -216,17 +310,25 @@ function cmdDone(res, commandObj) {
   Task.find({ token: commandObj.token, teamId: commandObj.teamId, completed: { $ne: null } }, function (err, tasks) {
     if(err) { return handleError(res, err); }
     if(tasks.length == 0) return handleError(res, 'No tasks found');
-    return res.json(200, tasks);
+    
+    var attachments = getFormattedTasks(tasks, false, false, true);
+    sendWebhook(commandObj, attachments);
+    
+    return res.send(200);
   }); 
 }
 
 function cmdDoing(res, commandObj) {
   if(commandObj.command !== 'doing') return handleError(res, 'Unexpected command');
   
-  Task.find({ token: commandObj.token, teamId: commandObj.teamId, completed: null, assignedTo: commandObj.user }, function (err, tasks) {
+  Task.find({ token: commandObj.token, teamId: commandObj.teamId, completed: null, assignedTo: '@' + commandObj.user }, function (err, tasks) {
     if(err) { return handleError(res, err); }
     if(tasks.length == 0) return handleError(res, 'No tasks found');
-    return res.json(200, tasks);
+    
+    var attachments = getFormattedTasks(tasks, false, false, false);
+    sendWebhook(commandObj, attachments);
+    
+    return res.send(200);
   }); 
 }
 
@@ -236,7 +338,11 @@ function cmdAssigned(res, commandObj) {
   Task.find({ token: commandObj.token, teamId: commandObj.teamId, completed: null, assignedTo: { $ne: null } }, function (err, tasks) {
     if(err) { return handleError(res, err); }
     if(tasks.length == 0) return handleError(res, 'No tasks found');
-    return res.json(200, tasks);
+    
+    var attachments = getFormattedTasks(tasks, true, false, false);
+    sendWebhook(commandObj, attachments);
+    
+    return res.send(200);
   }); 
 }
 
@@ -246,6 +352,10 @@ function cmdUnassigned(res, commandObj) {
   Task.find({ token: commandObj.token, teamId: commandObj.teamId, completed: null, assignedTo: null }, function (err, tasks) {
     if(err) { return handleError(res, err); }
     if(tasks.length == 0) return handleError(res, 'No tasks found');
-    return res.json(200, tasks);
+    
+    var attachments = getFormattedTasks(tasks, false, true, false);
+    sendWebhook(commandObj, attachments);
+    
+    return res.send(200);
   }); 
 }
