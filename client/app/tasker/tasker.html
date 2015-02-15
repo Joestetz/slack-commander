@@ -6,7 +6,13 @@ The following commands assume the slash command of '/tasker'. To change this, se
 <div class="col-md-12">
 <ul class="command-list">
   <li>
+    <div><span class="command">/tasker help</span> - Displays this list for you within slack.</div>
+  </li>
+  <li>
     <div><span class="command">/tasker add [task]</span> - Adds a task for your team.</div>
+  </li>
+  <li>
+    <div><span class="command">/tasker edit [task id] [task]</span> - Edits the task name.</div>
   </li>
   <li>
     <div><span class="command">/tasker complete [task id]</span> - Marks the specified task as complete.</div>
@@ -42,4 +48,10 @@ The following commands assume the slash command of '/tasker'. To change this, se
     <div><span class="command">/tasker unassigned</span> - Displays a list of available tasks.</div>
   </li>
 </ul>
+<div>
+  <strong>NOTE:</strong> All display commands (<span class="command">/tasker info</span> and below) can be broadcasted to the default channel by using 'shout'. For example, to display the task list to everyone in the channel, type <span class="command">/tasker shout list</span>.
+</div>
+<div>
+  <strong>NOTE:</strong> All display commands (<span class="command">/tasker info</span> and below) will be color-coded based on task status. Unassigned tasks will be <span class="color-gray">gray</span>, in progress (assigned) tasks will be <span class="color-orange">orange</span>, and completed tasks will be <span class="color-green">green</span>.
+</div>
 </div>
