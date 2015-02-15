@@ -4,21 +4,21 @@
 
 'use strict';
 
-var Command = require('./command.model');
+var Task = require('./task.model');
 
 exports.register = function(socket) {
-  Command.schema.post('save', function (doc) {
+  Task.schema.post('save', function (doc) {
     onSave(socket, doc);
   });
-  Command.schema.post('remove', function (doc) {
+  Task.schema.post('remove', function (doc) {
     onRemove(socket, doc);
   });
 }
 
 function onSave(socket, doc, cb) {
-  socket.emit('command:save', doc);
+  socket.emit('task:save', doc);
 }
 
 function onRemove(socket, doc, cb) {
-  socket.emit('command:remove', doc);
+  socket.emit('task:remove', doc);
 }
