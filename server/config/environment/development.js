@@ -5,7 +5,7 @@
 module.exports = {
   // MongoDB connection options
   mongo: {
-    uri: 'mongodb://localhost/slackdeploymenttracker-dev'
+    uri: 'mongodb://localhost/slackcommander-dev'
   },
 
   seedDB: true

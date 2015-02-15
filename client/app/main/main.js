@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('slackDeploymentTrackerApp')
+angular.module('slackCommanderApp')
   .config(function ($routeProvider) {
     $routeProvider
       .when('/', {

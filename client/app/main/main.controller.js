@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('slackDeploymentTrackerApp')
-  .controller('MainCtrl', function ($scope, $http, socket) {
+angular.module('slackCommanderApp')
+  .controller('MainCtrl', function () {
     
   });

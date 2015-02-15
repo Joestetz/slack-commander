@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('slackDeploymentTrackerApp')
+angular.module('slackCommanderApp')
   .controller('NavbarCtrl', function ($scope, $location) {
     $scope.menu = [{
       'title': 'Home',

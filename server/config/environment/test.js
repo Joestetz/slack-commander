@@ -5,6 +5,6 @@
 module.exports = {
   // MongoDB connection options
   mongo: {
-    uri: 'mongodb://localhost/slackdeploymenttracker-test'
+    uri: 'mongodb://localhost/slackcommander-test'
   }
 };
