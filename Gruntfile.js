@@ -33,10 +33,10 @@ module.exports = function (grunt) {
       // configurable paths
       client: require('./bower.json').appPath || 'client',
       dist: 'dist',
-      website_dev: '../website/client/showcase/slackDeploymentReminders',
-      website_prod: '../website/dist/public/showcase/slackDeploymentReminders',
-      website_server_dev: '../website/server/showcase/slackDeploymentReminders',
-      website_server_prod: '../website/dist/server/showcase/slackDeploymentReminders'
+      website_dev: '../website/client/showcase/slackDeploymentTracker',
+      website_prod: '../website/dist/public/showcase/slackDeploymentTracker',
+      website_server_dev: '../website/server/showcase/slackDeploymentTracker',
+      website_server_prod: '../website/dist/server/showcase/slackDeploymentTracker'
     },
     express: {
       options: {
