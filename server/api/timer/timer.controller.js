@@ -288,7 +288,6 @@ function getDelay(time) {
 function processTimer(timer) {
   if(timer.currentDelay) {
     timer.currentTimeLeft = timer.currentTimeLeft - timer.currentDelay;
-    sendWebhook(timer.commandObj, 'Timer Update: ' + timer.description + '\nTime Remaining: ' + formatTimer(timer.currentTimeLeft));
   }
   
   if(timer.currentTimeLeft <= 0) {
@@ -306,14 +305,16 @@ function processTimer(timer) {
     return;
   }
   
+  sendWebhook(timer.commandObj, 'Timer Update: ' + timer.description + '\nTime Remaining: ' + formatTimer(timer.currentTimeLeft));
+  
   var delay = nextUpdate(timer.currentTimeLeft);
   timer.currentDelay = delay;
   timer.timeoutObj = setTimeout(processTimer, delay, timer);
 }
 
 function nextUpdate(currentTimeLeft) {
-  if(currentTimeLeft <= 0) return 0; // 15s.. 14... ... 2s... 1s...
-  if(currentTimeLeft <= 15000) return 1000; // 15s.. 14... ... 2s... 1s...
+  if(currentTimeLeft <= 0) return 0;
+  if(currentTimeLeft <= 5000) return 1000; // 5s.. 4s... 3s...
   if(currentTimeLeft <= 60000) return 15000; // 60s... 45s.. 30s..
   if(currentTimeLeft <= 300000) return 60000; // 5m... 4m... 3m...
   if(currentTimeLeft <= 3600000) return 300000; // 60m... 55m... 50m...
