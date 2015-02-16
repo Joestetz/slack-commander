@@ -23,8 +23,8 @@ exports.index = function(req, res) {
     case 'help':
       commandResponse = cmdHelp(res, parsed);
       break;
-    case 'viewall':
-      commandResponse = cmdViewAll(res, parsed);
+    case 'list':
+      commandResponse = cmdList(res, parsed);
       break;
     default:
       commandResponse = handleError(res, 'Command not recognized');
@@ -35,6 +35,7 @@ exports.index = function(req, res) {
 };
 
 function sendWebhook(commandObj, msg, attachments) {
+  msg = 'Visit http://joestetz.com/showcase/slackCommander/timer for more details\n' + msg;
   var options = {
     username: 'TimerBot',
     icon_emoji: ':clock4:',
@@ -82,7 +83,11 @@ function parseCommand(req) {
     commandArgs.shift();
   }
   
-  res.command = commandArgs[0].toLowerCase();
+  if(commandArgs.length == 0 || commandArgs[0] === '') {
+    res.command = 'list';
+  } else {
+    res.command = commandArgs[0].toLowerCase();
+  }
   
   if(commandArgs.length > 1) {
     res.commandArgs = commandArgs.slice(1);
@@ -177,75 +182,80 @@ function cmdHelp(res, commandObj) {
   
   var attachments = [
     {
-      fallback: 'Command: /timer help - Displays the list of available commands.',
+      fallback: 'Command: `/timer help` - Displays the list of available commands.',
       text: 'Help',
       fields: [
         {
           title: 'Usage',
-          value: '/tasker help',
+          value: '`/tasker help`',
           'short': true
         },{
           title: 'Description',
           value: 'Displays the list of available commands.',
           'short': true
         }
-      ]
+      ],
+      mrkdwn_in: ['fallback', 'fields']
     },{
-      fallback: 'Command: /timer [shout] start h&#58;m&#58;s description - Starts a timer, optionally displayed for entire channel with "shout" option.',
+      fallback: 'Command: `/timer [shout] start h:m:s description` - Starts a timer, optionally displayed for entire channel with "shout" option.',
       text: 'Start Timer',
       fields: [
         {
           title: 'Usage',
-          value: '/timer [shout] start h&#58;m&#58;s description',
+          value: '`/timer [shout] start h:m:s description`',
           'short': true
         },{
           title: 'Description',
           value: 'Starts a timer, optionally displayed for entire channel with "shout" option.',
           'short': true
         }
-      ]
+      ],
+      mrkdwn_in: ['fallback', 'fields']
     },{
-      fallback: 'Command: /timer edit timerId h&#58;m&#58;s - Edits the specified timer.',
+      fallback: 'Command: `/timer edit timerId h:m:s` - Edits the specified timer.',
       text: 'Edit Timer',
       fields: [
         {
           title: 'Usage',
-          value: '/timer edit timerId h&#58;m&#58;s',
+          value: '`/timer edit timerId h:m:s`',
           'short': true
         },{
           title: 'Description',
           value: 'Edits the specified timer.',
           'short': true
         }
-      ]
+      ],
+      mrkdwn_in: ['fallback', 'fields']
     },{
-      fallback: 'Command: /timer stop timerId - Stops and removes the specified timer.',
+      fallback: 'Command: `/timer stop timerId` - Stops and removes the specified timer.',
       text: 'Stop Timer',
       fields: [
         {
           title: 'Usage',
-          value: '/timer stop timerId',
+          value: '`/timer stop timerId`',
           'short': true
         },{
           title: 'Description',
           value: 'Stops and removes the specified timer.',
           'short': true
         }
-      ]
+      ],
+      mrkdwn_in: ['fallback', 'fields']
     },{
-      fallback: 'Command: /timer viewall - Displays all active timers.',
+      fallback: 'Command: `/timer list` - Displays all active timers.',
       text: 'View All Timers',
       fields: [
         {
           title: 'Usage',
-          value: '/timer viewall',
+          value: '`/timer list`',
           'short': true
         },{
           title: 'Description',
           value: 'Displays all active timers.',
           'short': true
         }
-      ]
+      ],
+      mrkdwn_in: ['fallback', 'fields']
     }
   ];
   sendWebhook(commandObj, 'Usage: /timer [shout] [command] [args1..N]', attachments);
@@ -253,8 +263,8 @@ function cmdHelp(res, commandObj) {
   return res.send(200);
 }
 
-function cmdViewAll(res, commandObj) {
-  if(commandObj.command !== 'viewall') return handleError(res, 'Unexpected command');
+function cmdList(res, commandObj) {
+  if(commandObj.command !== 'list') return handleError(res, 'Unexpected command');
 
   var attachments = [];
   _.forEach(_timers, function(t) {
