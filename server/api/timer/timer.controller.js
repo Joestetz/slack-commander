@@ -17,8 +17,8 @@ exports.index = function(req, res) {
     case 'edit':
       commandResponse = cmdEdit(res, parsed);
       break;
-    case 'end':
-      commandResponse = cmdEnd(res, parsed);
+    case 'stop':
+      commandResponse = cmdStop(res, parsed);
       break;
     case 'help':
       commandResponse = cmdHelp(res, parsed);
@@ -140,8 +140,8 @@ function cmdEdit(res, commandObj) {
   
   clearTimeout(timer.timeoutObj);
   
-  var howLong = getDelay(commandObj.commandArgs[0]);
-  timer.howLongStr = commandObj.commandArgs[0],
+  var howLong = getDelay(commandObj.commandArgs[1]);
+  timer.howLongStr = commandObj.commandArgs[1],
   timer.howLong = howLong;
   timer.currentTimeLeft = howLong;
   
@@ -151,8 +151,8 @@ function cmdEdit(res, commandObj) {
   return handleSuccess(res);
 }
 
-function cmdEnd(res, commandObj) {
-  if(commandObj.command !== 'end') return handleError(res, 'Unexpected command');
+function cmdStop(res, commandObj) {
+  if(commandObj.command !== 'stop') return handleError(res, 'Unexpected command');
   if(!commandObj.commandArgs || commandObj.commandArgs.length <= 0) return handleError(res, 'Missing arguments');
   
   var timer = findTimer(commandObj.commandArgs[0]);
@@ -163,7 +163,7 @@ function cmdEnd(res, commandObj) {
     return t.id === timer.id;
   });
   
-  if(res && res.length == 0) {
+  if(res && res.length == 1) {
     sendWebhook(timer.commandObj, 'Timer Forced Stop: ' + timer.description);
   } else {
     sendWebhook(timer.commandObj, 'Timer force stop encountered an error');
@@ -191,12 +191,12 @@ function cmdHelp(res, commandObj) {
         }
       ]
     },{
-      fallback: 'Command: /timer [shout] start h:m:s description - Starts a timer, optionally displayed for entire channel with "shout" option.',
+      fallback: 'Command: /timer [shout] start h&#58;m&#58;s description - Starts a timer, optionally displayed for entire channel with "shout" option.',
       text: 'Start Timer',
       fields: [
         {
           title: 'Usage',
-          value: '/timer [shout] start h:m:s description',
+          value: '/timer [shout] start h&#58;m&#58;s description',
           'short': true
         },{
           title: 'Description',
@@ -205,12 +205,12 @@ function cmdHelp(res, commandObj) {
         }
       ]
     },{
-      fallback: 'Command: /timer edit timerId h:m:s - Edits the specified timer.',
+      fallback: 'Command: /timer edit timerId h&#58;m&#58;s - Edits the specified timer.',
       text: 'Edit Timer',
       fields: [
         {
           title: 'Usage',
-          value: '/timer edit timerId h:m:s',
+          value: '/timer edit timerId h&#58;m&#58;s',
           'short': true
         },{
           title: 'Description',
@@ -219,16 +219,30 @@ function cmdHelp(res, commandObj) {
         }
       ]
     },{
-      fallback: 'Command: /timer end timerId - Ends the specified timer.',
-      text: 'End Timer',
+      fallback: 'Command: /timer stop timerId - Stops and removes the specified timer.',
+      text: 'Stop Timer',
       fields: [
         {
           title: 'Usage',
-          value: '/timer end timerId',
+          value: '/timer stop timerId',
           'short': true
         },{
           title: 'Description',
-          value: 'Ends the specified timer.',
+          value: 'Stops and removes the specified timer.',
+          'short': true
+        }
+      ]
+    },{
+      fallback: 'Command: /timer viewall - Displays all active timers.',
+      text: 'View All Timers',
+      fields: [
+        {
+          title: 'Usage',
+          value: '/timer viewall',
+          'short': true
+        },{
+          title: 'Description',
+          value: 'Displays all active timers.',
           'short': true
         }
       ]
@@ -246,14 +260,11 @@ function cmdViewAll(res, commandObj) {
   _.forEach(_timers, function(t) {
     attachments.push({
       fallback: 'Timer ' + t.id + ' - ' + t.description + ' - ' + formatTimer(t.currentTimeLeft) + 'remaining.',
+      text: t.description,
       fields: [
         {
           title: 'Timer Id',
           value: t.id,
-          'short': true
-        },{
-          title: 'Description',
-          value: t.description,
           'short': true
         },{
           title: 'Time Remaining',
