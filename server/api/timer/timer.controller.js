@@ -105,7 +105,7 @@ function joinArgs(args, start) {
   return str;
 }
 
-function cmdStart(commandObj, res) {
+function cmdStart(res, commandObj) {
   if(commandObj.command !== 'start') return handleError(res, 'Unexpected command');
   if(!commandObj.commandArgs || commandObj.commandArgs.length <= 1) return handleError(res, 'Missing arguments');
   if(!isValidTime(commandObj.commandArgs[0])) return handleError(res, 'Time argument is invalid');
@@ -123,11 +123,14 @@ function cmdStart(commandObj, res) {
     commandObj: commandObj
   };
   
+  _timers.push(timer);
   sendWebhook(timer.commandObj, 'Timer Started: ' + timer.description + '\nTime Remaining: ' + formatTimer(timer.currentTimeLeft));
   processTimer(timer);
+  
+  return handleSuccess(res);
 }
 
-function cmdEdit(commandObj, res) {
+function cmdEdit(res, commandObj) {
   if(commandObj.command !== 'edit') return handleError(res, 'Unexpected command');
   if(!commandObj.commandArgs || commandObj.commandArgs.length <= 1) return handleError(res, 'Missing arguments');
   if(!isValidTime(commandObj.commandArgs[1])) return handleError(res, 'Time argument is invalid');
@@ -144,9 +147,11 @@ function cmdEdit(commandObj, res) {
   
   sendWebhook(timer.commandObj, 'Timer Edited: ' + timer.description + '\nNew Time: ' + timer.howLongStr);
   processTimer(timer);
+  
+  return handleSuccess(res);
 }
 
-function cmdEnd(commandObj, res) {
+function cmdEnd(res, commandObj) {
   if(commandObj.command !== 'end') return handleError(res, 'Unexpected command');
   if(!commandObj.commandArgs || commandObj.commandArgs.length <= 0) return handleError(res, 'Missing arguments');
   
@@ -163,9 +168,11 @@ function cmdEnd(commandObj, res) {
   } else {
     sendWebhook(timer.commandObj, 'Timer force stop encountered an error');
   }
+  
+  return handleSuccess(res);
 }
 
-function cmdHelp(commandObj, res) {
+function cmdHelp(res, commandObj) {
   if(commandObj.command !== 'help') return handleError(res, 'Unexpected command');
   
   var attachments = [
@@ -232,9 +239,9 @@ function cmdHelp(commandObj, res) {
   return res.send(200);
 }
 
-function cmdViewAll(commandObj, res) {
-  if(commandObj.command !== 'help') return handleError(res, 'Unexpected command');
-  
+function cmdViewAll(res, commandObj) {
+  if(commandObj.command !== 'viewall') return handleError(res, 'Unexpected command');
+
   var attachments = [];
   _.forEach(_timers, function(t) {
     attachments.push({
@@ -267,10 +274,8 @@ function isValidTime(time) {
   
   var timeArr = time.split(':');
   if(!timeArr || timeArr.length != 3) return false;
-  
   if(isNaN(timeArr[0]) || isNaN(timeArr[1]) || isNaN(timeArr[2])) return false;
-  
-  if(timeArr[0] > 12 || !(timeArr[0] == 12 && timeArr[1] == 0 && timeArr[2] == 0)) return false;
+  if(timeArr[0] > 12 || (timeArr[0] == 12 && timeArr[1] != 0 && timeArr[2] != 0)) return false;
   
   return true;
 }
@@ -281,7 +286,7 @@ function getDelay(time) {
 }
 
 function processTimer(timer) {
-  if(timer.howLong !== timer.currentTimeLeft) {
+  if(timer.currentDelay) {
     timer.currentTimeLeft = timer.currentTimeLeft - timer.currentDelay;
     sendWebhook(timer.commandObj, 'Timer Update: ' + timer.description + '\nTime Remaining: ' + formatTimer(timer.currentTimeLeft));
   }
@@ -290,15 +295,17 @@ function processTimer(timer) {
     var res = _.remove(_timers, function(t){
       return t.id === timer.id;
     });
+    console.log(_timers);
+    console.log(res);
     
-    if(res && res.length == 0) {
+    if(res && res.length == 1) {
       sendWebhook(timer.commandObj, 'Timer complete: ' + timer.description);
     } else {
       sendWebhook(timer.commandObj, 'Timer complete encountered an error');
     }
     return;
   }
-
+  
   var delay = nextUpdate(timer.currentTimeLeft);
   timer.currentDelay = delay;
   timer.timeoutObj = setTimeout(processTimer, delay, timer);
