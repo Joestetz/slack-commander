@@ -1,0 +1,21 @@
+<div ng-include="'components/navbar/navbar.html'"></div>
+
+<div class="col-md-12">
+The following commands assume the slash command of '/timer'. To change this, see the <a ng-href="./setup">Setup</a> page.
+</div>
+<div class="col-md-12">
+<ul class="command-list">
+  <li>
+    <div><span class="command">/timer help</span> - Displays the list of available commands.</div>
+  </li>
+  <li>
+    <div><span class="command">/timer [shout] start <em>time</em> <em>description</em></span> - Starts a timer, optionally displayed for entire channel with 'shout' option. Time must be in the format of h:m:s (ex: 2:10:0 or 0:0:30) and not exceed 12 hours. Anything longer than 12 hours should instead use <a href="joestetz.com/showcase/slackbotReminders">slackbotReminders</a>.</div>
+  </li>
+  <li>
+    <div><span class="command">/timer edit <em>timer id</em> <em>time</em></span> - Edits the specified timer.</div>
+  </li>
+  <li>
+    <div><span class="command">/timer end <em>timer id</em></span> - Ends the specified timer.</div>
+  </li>
+</ul>
+</div>

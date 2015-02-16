@@ -18,6 +18,7 @@ function onConnect(socket) {
   });
 
   // Insert sockets below
+  require('../api/timer/timer.socket').register(socket);
   require('../api/task/task.socket').register(socket);
 }
 
