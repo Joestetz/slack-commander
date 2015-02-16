@@ -3,7 +3,7 @@
 describe('Controller: TimerCtrl', function () {
 
   // load the controller's module
-  beforeEach(module('slackDeploymentTrackerApp'));
+  beforeEach(module('slackCommanderApp'));
 
   var TimerCtrl, scope;
 

@@ -1,7 +1,6 @@
 'use strict';
 
 var _ = require('lodash');
-var schedule = require('node-schedule');
 var Slack = require('slack-notify')('https://hooks.slack.com/services/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');
 
 var _timers = [];
@@ -23,6 +22,9 @@ exports.index = function(req, res) {
       break;
     case 'help':
       commandResponse = cmdHelp(res, parsed);
+      break;
+    case 'viewall':
+      commandResponse = cmdViewAll(res, parsed);
       break;
     default:
       commandResponse = handleError(res, 'Command not recognized');
@@ -60,7 +62,7 @@ function handleSuccess(res, msg) {
 }
 
 function parseCommand(req) {
-  if(!req.body.token || !req.body.team_id || !req.body.user_name || !req.body.channel_name) {
+  if(!req.body.token || !req.body.team_id || !req.body.user_name || !req.body.channel_name || !req.body.user_id) {
     return { error: true };
   }
   
@@ -70,6 +72,7 @@ function parseCommand(req) {
     teamId: req.body.team_id,
     user: req.body.user_name,
     channel: req.body.channel_name,
+    userId: req.body.user_id,
     shout: false
   };
   
@@ -79,11 +82,7 @@ function parseCommand(req) {
     commandArgs.shift();
   }
   
-  if(commandArgs.length == 0 || commandArgs[0] === '') {
-    res.command = 'list';
-  } else {
-    res.command = commandArgs[0].toLowerCase();
-  }
+  res.command = commandArgs[0].toLowerCase();
   
   if(commandArgs.length > 1) {
     res.commandArgs = commandArgs.slice(1);
@@ -107,15 +106,63 @@ function joinArgs(args, start) {
 }
 
 function cmdStart(commandObj, res) {
-
+  if(commandObj.command !== 'start') return handleError(res, 'Unexpected command');
+  if(!commandObj.commandArgs || commandObj.commandArgs.length <= 1) return handleError(res, 'Missing arguments');
+  if(!isValidTime(commandObj.commandArgs[0])) return handleError(res, 'Time argument is invalid');
+  
+  var description = joinArgs(commandObj.commandArgs, 1);
+  var howLong = getDelay(commandObj.commandArgs[0]);
+  
+  var timer = {
+    id: commandObj.userId + new Date().getTime(),
+    description: description,
+    howLongStr: commandObj.commandArgs[0],
+    howLong: howLong,
+    currentTimeLeft: howLong,
+    startTime: new Date(),
+    commandObj: commandObj
+  };
+  
+  sendWebhook(timer.commandObj, 'Timer Started: ' + timer.description + '\nTime Remaining: ' + formatTimer(timer.currentTimeLeft));
+  processTimer(timer);
 }
 
 function cmdEdit(commandObj, res) {
-
+  if(commandObj.command !== 'edit') return handleError(res, 'Unexpected command');
+  if(!commandObj.commandArgs || commandObj.commandArgs.length <= 1) return handleError(res, 'Missing arguments');
+  if(!isValidTime(commandObj.commandArgs[1])) return handleError(res, 'Time argument is invalid');
+  
+  var timer = findTimer(commandObj.commandArgs[0]);
+  if(!timer || !timer.timeoutObj) return handleError(res, 'Timer not found');
+  
+  clearTimeout(timer.timeoutObj);
+  
+  var howLong = getDelay(commandObj.commandArgs[0]);
+  timer.howLongStr = commandObj.commandArgs[0],
+  timer.howLong = howLong;
+  timer.currentTimeLeft = howLong;
+  
+  sendWebhook(timer.commandObj, 'Timer Edited: ' + timer.description + '\nNew Time: ' + timer.howLongStr);
+  processTimer(timer);
 }
 
 function cmdEnd(commandObj, res) {
-
+  if(commandObj.command !== 'end') return handleError(res, 'Unexpected command');
+  if(!commandObj.commandArgs || commandObj.commandArgs.length <= 0) return handleError(res, 'Missing arguments');
+  
+  var timer = findTimer(commandObj.commandArgs[0]);
+  if(!timer || !timer.timeoutObj) return handleError(res, 'Timer not found');
+  
+  clearTimeout(timer.timeoutObj);
+  var res = _.remove(_timers, function(t){
+    return t.id === timer.id;
+  });
+  
+  if(res && res.length == 0) {
+    sendWebhook(timer.commandObj, 'Timer Forced Stop: ' + timer.description);
+  } else {
+    sendWebhook(timer.commandObj, 'Timer force stop encountered an error');
+  }
 }
 
 function cmdHelp(commandObj, res) {
@@ -183,5 +230,109 @@ function cmdHelp(commandObj, res) {
   sendWebhook(commandObj, 'Usage: /timer [shout] [command] [args1..N]', attachments);
   
   return res.send(200);
+}
+
+function cmdViewAll(commandObj, res) {
+  if(commandObj.command !== 'help') return handleError(res, 'Unexpected command');
+  
+  var attachments = [];
+  _.forEach(_timers, function(t) {
+    attachments.push({
+      fallback: 'Timer ' + t.id + ' - ' + t.description + ' - ' + formatTimer(t.currentTimeLeft) + 'remaining.',
+      fields: [
+        {
+          title: 'Timer Id',
+          value: t.id,
+          'short': true
+        },{
+          title: 'Description',
+          value: t.description,
+          'short': true
+        },{
+          title: 'Time Remaining',
+          value: formatTimer(t.currentTimeLeft),
+          'short': true
+        }
+      ]
+    });
+  });
+  
+  sendWebhook(commandObj, 'Active Timers', attachments);
+  
+  return res.send(200);
+}
+
+function isValidTime(time) {
+  if(!time) return false;
+  
+  var timeArr = time.split(':');
+  if(!timeArr || timeArr.length != 3) return false;
+  
+  if(isNaN(timeArr[0]) || isNaN(timeArr[1]) || isNaN(timeArr[2])) return false;
+  
+  if(timeArr[0] > 12 || !(timeArr[0] == 12 && timeArr[1] == 0 && timeArr[2] == 0)) return false;
+  
+  return true;
+}
+
+function getDelay(time) {
+  var timeArr = time.split(':');
+  return timeArr[0] * 3600000 + timeArr[1] * 60000 + timeArr[2] * 1000;
+}
+
+function processTimer(timer) {
+  if(timer.howLong !== timer.currentTimeLeft) {
+    timer.currentTimeLeft = timer.currentTimeLeft - timer.currentDelay;
+    sendWebhook(timer.commandObj, 'Timer Update: ' + timer.description + '\nTime Remaining: ' + formatTimer(timer.currentTimeLeft));
+  }
+  
+  if(timer.currentTimeLeft <= 0) {
+    var res = _.remove(_timers, function(t){
+      return t.id === timer.id;
+    });
+    
+    if(res && res.length == 0) {
+      sendWebhook(timer.commandObj, 'Timer complete: ' + timer.description);
+    } else {
+      sendWebhook(timer.commandObj, 'Timer complete encountered an error');
+    }
+    return;
+  }
+
+  var delay = nextUpdate(timer.currentTimeLeft);
+  timer.currentDelay = delay;
+  timer.timeoutObj = setTimeout(processTimer, delay, timer);
+}
+
+function nextUpdate(currentTimeLeft) {
+  if(currentTimeLeft <= 0) return 0; // 15s.. 14... ... 2s... 1s...
+  if(currentTimeLeft <= 15000) return 1000; // 15s.. 14... ... 2s... 1s...
+  if(currentTimeLeft <= 60000) return 15000; // 60s... 45s.. 30s..
+  if(currentTimeLeft <= 300000) return 60000; // 5m... 4m... 3m...
+  if(currentTimeLeft <= 3600000) return 300000; // 60m... 55m... 50m...
+  return 900000; // 3h... 2h45m... 2h30m...
+}
+
+function findTimer(timerId) {
+  return _.find(_timers, function(t) {
+    return t.id == timerId;
+  });
+}
+
+function formatTimer(timeLeft) {
+  var seconds = parseInt((timeLeft/1000) % 60)
+  var minutes = parseInt((timeLeft/(1000 * 60)) % 60)
+  var hours = parseInt((timeLeft/(1000 * 60 * 60)) % 24);
+  
+  var str = '';
+  if(hours > 0) {
+    str = hours + 'h ' + minutes + 'm';
+  } else if(minutes > 0) {
+    str = minutes + 'm';
+  } else {
+    str = seconds + 's';
+  }
+
+  return str;
 }
 
