@@ -169,12 +169,12 @@ function cmdHelp(res, commandObj) {
   
   var attachments = [
     {
-      fallback: 'Command: /jira help - Displays list of available commands',
+      fallback: 'Command: `/jira help` - Displays list of available commands',
       text: 'Help',
       fields: [
         {
           title: 'Usage',
-          value: '/jira help',
+          value: '`/jira help`',
           'short': true
         },{
           title: 'Description',
@@ -290,7 +290,7 @@ function cmdHelp(res, commandObj) {
       mrkdwn_in: ['fallback', 'fields']
     }
   ];
-  sendWebhook(commandObj, attachments, 'Usage: /jira [project] [command] [args1..N]');
+  sendWebhook(commandObj, attachments, 'Usage: `/jira [project] [command] [args1..N]`');
   
   return res.send(200);
 }
@@ -342,7 +342,7 @@ function cmdTodo(res, commandObj) {
   if(commandObj.command !== 'todo') return handleError(res, 'Unexpected command');
   
   var todoType;
-  if(commandObj.commandArgs.length > 0) {
+  if(commandObj.commandArgs && commandObj.commandArgs.length > 0) {
     todoType = commandObj.commandArgs[0].toLowerCase();
   } else {
     todoType = 'none';
@@ -354,13 +354,13 @@ function cmdTodo(res, commandObj) {
       jql = jql + ' AND status = "To Do"';
       break;
     case 'qa':
-      jql = jql + ' AND status = "Ready for QA" AND assignee is EMPTY';
+      jql = jql + ' AND status in ("Ready for QA", "Ready for QA to Break It!") AND assignee is EMPTY';
       break;
     case 'codereview':
-      jql = jql + ' AND "Code Review" is EMPTY';
+      jql = jql + ' AND status in ("Ready for QA", "Ready for QA to Break It!", "In QA", "PO Accept Me") AND "Code Review" is EMPTY';
       break;
     case 'po':
-      jql = jql + ' AND status = "PO Accept Me" AND assignee is EMPTY';
+      jql = jql + ' AND status = "PO Accept Me"';
       break;
     default:
       jql = jql + ' AND status = "To Do"';
@@ -370,12 +370,19 @@ function cmdTodo(res, commandObj) {
 }
 
 function queryJira(res, commandObj, jql, maxResults) {
+  if(maxResults) {
+    maxResults = (maxResults > 50) ? 50 : maxResults;
+  } else {
+    maxResults = 5;
+  }
+  
   var options = {
     url: _rootUrl + '/rest/api/2/search',
     headers: {
       'Authorization': 'Basic ' + _authCode
     },
     json: true,
+    method: 'post',
     body: {
       jql: jql,
       maxResults: maxResults
