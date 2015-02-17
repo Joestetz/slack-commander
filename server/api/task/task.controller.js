@@ -96,7 +96,7 @@ function getFormattedTasks(tasks, showAssignedTo, showAuthor, showCompleted) {
     
     if(showAssignedTo) {
       attach.fields.push({
-        title: 'Assgned To',
+        title: 'Assigned To',
         value: t.assignedTo,
         'short': true
       });

@@ -35,7 +35,6 @@ exports.index = function(req, res) {
 };
 
 function sendWebhook(commandObj, msg, attachments) {
-  msg = 'Visit http://joestetz.com/showcase/slackCommander/timer for more details\n' + msg;
   var options = {
     username: 'TimerBot',
     icon_emoji: ':clock4:',
@@ -129,7 +128,7 @@ function cmdStart(res, commandObj) {
   };
   
   _timers.push(timer);
-  sendWebhook(timer.commandObj, 'Timer Started: ' + timer.description + '\nTime Remaining: ' + formatTimer(timer.currentTimeLeft));
+  sendWebhook(timer.commandObj, 'Visit http://joestetz.com/showcase/slackCommander/timer for more details\nTimer Started: ' + timer.description + '\nTime Remaining: ' + formatTimer(timer.currentTimeLeft));
   processTimer(timer);
   
   return handleSuccess(res);
@@ -258,7 +257,7 @@ function cmdHelp(res, commandObj) {
       mrkdwn_in: ['fallback', 'fields']
     }
   ];
-  sendWebhook(commandObj, 'Usage: /timer [shout] [command] [args1..N]', attachments);
+  sendWebhook(commandObj, 'Visit http://joestetz.com/showcase/slackCommander/timer for more details\nUsage: /timer [shout] [command] [args1..N]', attachments);
   
   return res.send(200);
 }
