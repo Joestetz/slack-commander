@@ -5,6 +5,6 @@ var controller = require('./jira.controller');
 
 var router = express.Router();
 
-router.post('/', controller.jira);
+router.post('/', controller.index);
 
 module.exports = router;

@@ -53,8 +53,7 @@ function sendWebhook(commandObj, attachments, msg) {
     options.channel = '@' + commandObj.user;
   }
   
-  //Slack.send(options);
-  console.log(options);
+  Slack.send(options);
 }
 
 function getStatusCategory(issue) {
@@ -75,7 +74,7 @@ function getFormattedIssues(issues, moreInfo) {
       title: 'Issue ' + issue.key + ': ' + issue.fields.summary,
       title_link: _rootUrl + '/browse/' + issue.key,
       text: issue.fields.description,
-      color: (statusCat == 0 ? _colorToDo : (statusCat == 1 ? _colorInProgress : _colorDone));
+      color: (statusCat == 0) ? _colorToDo : (statusCat == 1 ? _colorInProgress : _colorDone)
     };
     
     if(moreInfo) {
@@ -135,6 +134,13 @@ function parseCommand(req) {
   if(commandArgs[0].toLowerCase() === 'help') {
     res.command = commandArgs[0].toLowerCase();
     return res;
+  }
+  
+  commandArgs.shift();
+  if(commandArgs.length <= 0) {
+    res.command = '';
+  } else {
+    res.command = commandArgs[0].toLowerCase();
   }
   
   if(commandArgs.length > 1) {
@@ -284,7 +290,7 @@ function cmdHelp(res, commandObj) {
       mrkdwn_in: ['fallback', 'fields']
     }
   ];
-  sendWebhook(commandObj, 'Usage: /jira [project] [command] [args1..N]', attachments);
+  sendWebhook(commandObj, attachments, 'Usage: /jira [project] [command] [args1..N]');
   
   return res.send(200);
 }
@@ -296,7 +302,7 @@ function cmdInfo(res, commandObj) {
   }
   
   var jql = 'Project = ' + commandObj.project + ' AND key = ' + commandObj.commandArgs[0];
-  queryJira(commandObj, jql);
+  queryJira(res, commandObj, jql);
 }
 
 function cmdFor(res, commandObj) {
@@ -306,7 +312,7 @@ function cmdFor(res, commandObj) {
   }
   
   var jql = 'Project = ' + commandObj.project + ' AND sprint in openSprints () AND assignee = ' + commandObj.commandArgs[0] + ' AND statusCategory != Done';
-  queryJira(commandObj, jql);
+  queryJira(res, commandObj, jql);
 }
 
 function cmdTop(res, commandObj) {
@@ -329,7 +335,7 @@ function cmdTop(res, commandObj) {
   }
   jql = jql + ' ORDER BY priority';
   
-  queryJira(commandObj, jql, maxResults);
+  queryJira(res, commandObj, jql, maxResults);
 }
 
 function cmdTodo(res, commandObj) {
@@ -360,15 +366,16 @@ function cmdTodo(res, commandObj) {
       jql = jql + ' AND status = "To Do"';
       break;
   }
-  queryJira(commandObj, jql);
+  queryJira(res, commandObj, jql);
 }
 
-function queryJira(commandObj, jql, maxResults) {
+function queryJira(res, commandObj, jql, maxResults) {
   var options = {
     url: _rootUrl + '/rest/api/2/search',
     headers: {
       'Authorization': 'Basic ' + _authCode
     },
+    json: true,
     body: {
       jql: jql,
       maxResults: maxResults
@@ -377,9 +384,8 @@ function queryJira(commandObj, jql, maxResults) {
   
   request(options, function(error, response, body) {
     if (!error && response.statusCode == 200) {
-      var jsonBody = JSON.parse(body);
-      if(jsonBody.data && jsonBody.data.length > 0) {
-        var attachments = getFormattedIssues(jsonBody.issues);
+      if(body.issues && body.issues.length > 0) {
+        var attachments = getFormattedIssues(body.issues);
         sendWebhook(commandObj, attachments, '');
         handleSuccess(res);
       } else {
