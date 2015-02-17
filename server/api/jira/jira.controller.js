@@ -84,6 +84,10 @@ function getFormattedIssues(issues, moreInfo) {
           value: issue.fields.status.name,
           'short': true
         },{
+          title: 'Type',
+          value: issue.fields.issuetype.name,
+          'short': true
+        },{
           title: 'Assignee',
           value: issue.fields.assignee.displayName + '(' + issue.fields.assignee.name + ')',
           'short': true
@@ -312,6 +316,7 @@ function cmdFor(res, commandObj) {
   }
   
   var jql = 'Project = ' + commandObj.project + ' AND sprint in openSprints () AND assignee = ' + commandObj.commandArgs[0] + ' AND statusCategory != Done';
+  jql = jql + ' ORDER BY rank';
   queryJira(res, commandObj, jql);
 }
 
@@ -333,7 +338,7 @@ function cmdTop(res, commandObj) {
   } else {
     jql = jql + ' AND statusCategory != Done';
   }
-  jql = jql + ' ORDER BY priority';
+  jql = jql + ' ORDER BY rank';
   
   queryJira(res, commandObj, jql, maxResults);
 }
@@ -366,6 +371,7 @@ function cmdTodo(res, commandObj) {
       jql = jql + ' AND status = "To Do"';
       break;
   }
+  jql = jql + ' ORDER BY rank';
   queryJira(res, commandObj, jql);
 }
 
@@ -392,7 +398,7 @@ function queryJira(res, commandObj, jql, maxResults) {
   request(options, function(error, response, body) {
     if (!error && response.statusCode == 200) {
       if(body.issues && body.issues.length > 0) {
-        var attachments = getFormattedIssues(body.issues);
+        var attachments = getFormattedIssues(body.issues, commandObj.command == 'info');
         sendWebhook(commandObj, attachments, '');
         handleSuccess(res);
       } else {
