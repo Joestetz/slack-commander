@@ -1,0 +1,33 @@
+<div ng-include="'components/navbar/navbar.html'"></div>
+
+<div class="col-md-12">
+The following commands assume the slash command of '/jira'. To change this, see the <a ng-href="./setup">Setup</a> page.
+</div>
+<div class="col-md-12">
+<ul class="command-list">
+  <li>
+    <div><span class="command">/jira help</span> - Displays the list of available commands.</div>
+  </li>
+  <li>
+    <div><span class="command">/jira info <em>issue id</em></span> - Displays information on the specified JIRA issue.</div>
+  </li>
+  <li>
+    <div><span class="command">/jira for <em>jira username</em></span> - Displays all in-progress tasks assigned to username.</div>
+  </li>
+  <li>
+    <div><span class="command">/jira top <em>N</em> <em>[status]</em></span> - Displays the top N priority items, optionally filtered by status.</div>
+  </li>
+  <li>
+    <div><span class="command">/jira todo</span> - Displays all tasks that have not been started.</div>
+  </li>
+  <li>
+    <div><span class="command">/jira todo qa</span> - Displays all tasks ready for qa assignment.</div>
+  </li>
+  <li>
+    <div><span class="command">/jira todo codereview</span> - Displays all tasks ready for code review.</div>
+  </li>
+  <li>
+    <div><span class="command">/jira todo po</span> - Displays all tasks ready for PO acceptance.</div>
+  </li>
+</ul>
+</div>
