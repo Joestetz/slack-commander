@@ -14,6 +14,9 @@ angular.module('slackCommanderApp')
     },{
       'title': 'Timer',
       'link': './timer'
+    },{
+      'title': 'Beer',
+      'link': './beer'
     }];
 
     $scope.isCollapsed = true;
