@@ -20,6 +20,7 @@
     "node-slack": "0.0.5",
     "request": "^2.53.0",
     "serve-favicon": "~2.0.1",
+    "slack-node": "^0.1.0",
     "slack-notify": "^0.1.4",
     "socket.io": "^1.0.6",
     "socket.io-client": "^1.0.6",
