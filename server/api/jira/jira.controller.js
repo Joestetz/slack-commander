@@ -78,6 +78,16 @@ function getFormattedIssues(issues, moreInfo) {
     };
     
     if(moreInfo) {
+      var assigneeName;
+      var assigneeDisplayName;
+      if(!issue.fields.assignee || !issue.fields.assignee.name) {
+        assigneeName = 'N/A';
+        assigneeDisplayName = 'Unassigned';
+      } else {
+        assigneeName = issue.fields.assignee.name;
+        assigneeDisplayName = issue.fields.assignee.displayName;
+      }
+      
       attach.fields = [
         {
           title: 'Status',
@@ -89,7 +99,7 @@ function getFormattedIssues(issues, moreInfo) {
           'short': true
         },{
           title: 'Assignee',
-          value: issue.fields.assignee.displayName + '(' + issue.fields.assignee.name + ')',
+          value: assigneeDisplayName + ' (' + assigneeName + ')',
           'short': true
         }
       ];

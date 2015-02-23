@@ -96,7 +96,7 @@ function sendFormattedBeer(commandObj, beerObj) {
         'short': true
       },{
         title: 'Recommended Glass',
-        value: beerObj.glass.name,
+        value: beerObj.glass ? beerObj.glass.name : 'N/A',
         'short': true
       }
     ]
