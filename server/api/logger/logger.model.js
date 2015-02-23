@@ -6,7 +6,7 @@ var mongoose = require('mongoose'),
 var LoggerSchema = new Schema({
   userId: String,
   userName: String,
-  timestamp: { type Date, required: true, default: Date.now },
+  timestamp: { type: Date, required: true, default: Date.now },
   logType: { type: String, required: true },
   logMessage: String
 });
