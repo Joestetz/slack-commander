@@ -60,16 +60,16 @@ function searchBeer(res, commandObj) {
   if(!commandObj.query || commandObj.query.length < 5) return handleError(res, 'query must be at least 5 characters');
   
   request(_apiUrl + 'search/beer?q=' + commandObj.query + '&limit=1&client_id=' + _clientId + '&client_secret=' + _clientSecret, function(error, response, body) {
-    if (!error && response.meta && response.meta.code === 200) {
+    if (!error && response.statusCode === 200) {
       var jsonBody = JSON.parse(body);
-      if(jsonBody.data && jsonBody.data.response && jsonBody.data.response.beers.count > 0) {
-        sendFormattedBeer(commandObj, jsonBody.data.response.beers);
+      if(jsonBody && jsonBody.response && jsonBody.response.beers.count > 0) {
+        sendFormattedBeer(commandObj, jsonBody.response.beers.items[0]);
         handleSuccess(res);
       } else {
         handleError(res, 'Beer not found');
       }
     } else {
-      handleError(res, 'Unexpected error');
+      handleError(res, 'Ooops! Unexpected error');
     }
   });
 }
@@ -79,10 +79,11 @@ function sendFormattedBeer(commandObj, beerObj) {
     fallback: beerObj.beer.beer_name + ' - ' + beerObj.beer.beer_description,
     title: beerObj.beer.beer_name,
     text: beerObj.beer.beer_description,
+    thumb_url: beerObj.brewery.brewery_label,
     fields: [
       {
         title: 'Brewery Name',
-        value: beerObj.brewery.brewery_name,
+        value: formatName(beerObj.brewery),
         'short': true
       },{
         title: 'Brewery Location',
@@ -93,12 +94,8 @@ function sendFormattedBeer(commandObj, beerObj) {
         value: beerObj.beer.beer_style,
         'short': true
       },{
-        title: 'ABV',
-        value: beerObj.beer.beer_abv,
-        'short': true
-      },{
-        title: 'IBU',
-        value: beerObj.beer.beer_ibu,
+        title: 'ABV / IBU',
+        value: beerObj.beer.beer_abv + ' / ' + beerObj.beer.beer_ibu,
         'short': true
       }
     ]
@@ -126,6 +123,16 @@ function formatLocation(city, state, country) {
   if(country && country !== '') {
     if(str.length > 0) str += ', ';
     str += country;
+  }
+  
+  return str;
+}
+
+function formatName(brewery) {
+  var str = brewery.brewery_name;
+  
+  if(brewery.contact && brewery.contact.url) {
+    str = '<' + brewery.contact.url + '|' + str + '>';
   }
   
   return str;
