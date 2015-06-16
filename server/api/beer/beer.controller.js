@@ -4,8 +4,9 @@ var _ = require('lodash');
 var request = require('request');
 var Slack = require('slack-notify')('https://hooks.slack.com/services/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');
 
-var _apiUrl = 'http://api.brewerydb.com/v2';
-var _apiKey = '2472cc65cb88495708d1130e70db9f56'
+var _clientId = 'B1B3E4CDDEA6A1EE1D52FA2990B9D2D1DE79A636';
+var _clientSecret = '49A90FC44DA1A142F6816FDCBEFF7ADFF832972B';
+var _apiUrl = 'https://api.untappd.com/v4/';
 
 exports.index = function(req, res) {
   var parsed = parseCommand(req);
@@ -15,7 +16,6 @@ exports.index = function(req, res) {
 };
 
 function sendWebhook(commandObj, attachments, msg) {
-  msg = 'Visit http://joestetz.com/showcase/slackCommander/beer for more details\n' + msg;
   var options = {
     username: 'BeerBot',
     icon_emoji: ':beer:',
@@ -59,11 +59,11 @@ function parseCommand(req) {
 function searchBeer(res, commandObj) {
   if(!commandObj.query || commandObj.query.length < 5) return handleError(res, 'query must be at least 5 characters');
   
-  request(_apiUrl + '/search?p=1&type=beer&q=' + commandObj.query + '&key=' + _apiKey, function(error, response, body) {
-    if (!error && response.statusCode == 200) {
+  request(_apiUrl + 'search/beer?q=' + commandObj.query + '&limit=1&client_id=' + _clientId + '&client_secret=' + _clientSecret, function(error, response, body) {
+    if (!error && response.meta && response.meta.code === 200) {
       var jsonBody = JSON.parse(body);
-      if(jsonBody.data && jsonBody.data.length > 0) {
-        sendFormattedBeer(commandObj, jsonBody.data[0]);
+      if(jsonBody.data && jsonBody.data.response && jsonBody.data.response.beers.count > 0) {
+        sendFormattedBeer(commandObj, jsonBody.data.response.beers);
         handleSuccess(res);
       } else {
         handleError(res, 'Beer not found');
@@ -75,32 +75,58 @@ function searchBeer(res, commandObj) {
 }
 
 function sendFormattedBeer(commandObj, beerObj) {
-  var attachment = {
-    fallback: beerObj.name + ' - ' + beerObj.description,
-    title: beerObj.name,
-    text: beerObj.description,
+  var attachments = [{
+    fallback: beerObj.beer.beer_name + ' - ' + beerObj.beer.beer_description,
+    title: beerObj.beer.beer_name,
+    text: beerObj.beer.beer_description,
     fields: [
       {
-        title: 'Style',
-        value: beerObj.style.name,
-        'short': true
-      },
-      {
-        title: 'Category',
-        value: beerObj.style.category.name,
-        'short': true
-      },
-      {
-        title: 'ABV',
-        value: beerObj.abv,
+        title: 'Brewery Name',
+        value: beerObj.brewery.brewery_name,
         'short': true
       },{
-        title: 'Recommended Glass',
-        value: beerObj.glass ? beerObj.glass.name : 'N/A',
+        title: 'Brewery Location',
+        value: formatLocation(beerObj.brewery.location.brewery_city, beerObj.brewery.location.brewery_state, beerObj.brewery.country_name),
+        'short': true
+      },{
+        title: 'Style',
+        value: beerObj.beer.beer_style,
+        'short': true
+      },{
+        title: 'ABV',
+        value: beerObj.beer.beer_abv,
+        'short': true
+      },{
+        title: 'IBU',
+        value: beerObj.beer.beer_ibu,
         'short': true
       }
     ]
-  };
+  },{
+    fallback: '',
+    title: 'BeerBot - now with untappd potential!',
+    text: 'Visit http://joestetz.com/showcase/slackCommander/beer for more details'
+  }];
   
-  sendWebhook(commandObj, [attachment], '@' + commandObj.user + ' is drinking...');
+  sendWebhook(commandObj, attachments, '@' + commandObj.user + ' is drinking...');
+}
+
+function formatLocation(city, state, country) {
+  var str = '';
+  
+  if(city && city !== '') {
+    str += city;
+  }
+  
+  if(state && state !== '') {
+    if(str.length > 0) str += ', ';
+    str += state;
+  }
+  
+  if(country && country !== '') {
+    if(str.length > 0) str += ', ';
+    str += country;
+  }
+  
+  return str;
 }
