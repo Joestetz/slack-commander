@@ -2,7 +2,7 @@
 
 var _ = require('lodash');
 var request = require('request');
-var Slack = require('slack-notify')('https://hooks.slack.com/services/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');
+var Slack = require('slack-notify')('https://hooks.slack.com/services/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');
 
 var _clientId = 'B1B3E4CDDEA6A1EE1D52FA2990B9D2D1DE79A636';
 var _clientSecret = '49A90FC44DA1A142F6816FDCBEFF7ADFF832972B';
