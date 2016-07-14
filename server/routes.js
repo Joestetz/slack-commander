@@ -11,6 +11,7 @@ module.exports = function(app) {
   // Insert routes below
   app.use('/api/jira', require('./api/jira'));
   app.use('/api/beers', require('./api/beer'));
+  app.use('/api/v2/beers', require('./api/v2/beer'));
   app.use('/api/timers', require('./api/timer'));
   app.use('/api/tasks', require('./api/task'));
   
